@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  # Config server that determines routing logic
+  configserver:
+    build: ./configserver
+    container_name: cs_configserver
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    networks:
+      - containerssh_net
+
+  # ContainerSSH gateway
+  containerssh:
+    image: containerssh/containerssh:0.4
+    container_name: containerssh
+    restart: unless-stopped
+    depends_on:
+      - configserver
+      - vm1
+      - vm2
+    ports:
+      - "2222:2222"  # SSH port (using 2222 for local testing)
+    environment:
+      - CONTAINERSSH_CONFIG=/etc/containerssh/config.yaml
+    volumes:
+      - ./containerssh/config.yaml:/etc/containerssh/config.yaml:ro
+      - ./containerssh/keys:/etc/containerssh/keys:ro
+      - ./data/known_hosts:/etc/containerssh/known_hosts:ro
+    networks:
+      - containerssh_net
+
+  # Mock backend VM 1
+  vm1:
+    build: ./backend-vms
+    container_name: backend_vm1
+    hostname: vm1
+    restart: unless-stopped
+    environment:
+      - VM_NAME=vm1
+    networks:
+      - containerssh_net
+
+  # Mock backend VM 2
+  vm2:
+    build: ./backend-vms
+    container_name: backend_vm2
+    hostname: vm2
+    restart: unless-stopped
+    environment:
+      - VM_NAME=vm2
+    networks:
+      - containerssh_net
+
+networks:
+  containerssh_net:
+    driver: bridge
