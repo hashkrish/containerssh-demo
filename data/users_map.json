@@ -1,0 +1,37 @@
+{
+  "alice": {
+    "backend": "vm1",
+    "port": 22,
+    "authorized_keys": [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINptJI6X8bas6NlMGFW7CWKRqkHOpySdPkdiI/poqdrR test-user-alice"
+    ]
+  },
+  "bob": {
+    "backend": "vm2",
+    "port": 22,
+    "authorized_keys": [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFmFFpLh2E+Lx8TKH0THeU33FpwRSah7UcjxdjRMESXE test-user-bob"
+    ]
+  },
+  "admin-john": {
+    "backend": "vm1",
+    "port": 22,
+    "authorized_keys": [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAe4yvAxH8/Y7aHXFJ+ZY8LLCdjR3PEtyLbIWy9nsscR test-user-admin-john"
+    ]
+  },
+  "dev-sarah": {
+    "backend": "vm2",
+    "port": 22,
+    "authorized_keys": [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMGJ95H0omMODlCN3fGsEiX+3HLs99LLLh4g8ISACatw test-user-dev-sarah"
+    ]
+  },
+  "testuser": {
+    "backend": "vm1",
+    "port": 22,
+    "authorized_keys": [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILNTT4oEOuDphtn3mlTUzbicLKEReAPpvvHz+Ji1CVms test-user-testuser"
+    ]
+  }
+}
