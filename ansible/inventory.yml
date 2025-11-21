@@ -1,0 +1,31 @@
+---
+# Ansible inventory for ContainerSSH backend VMs
+# For local testing with Docker containers
+
+all:
+  children:
+    backend_vms:
+      hosts:
+        vm1:
+          ansible_host: localhost
+          ansible_port: 2201
+          ansible_user: root
+        vm2:
+          ansible_host: localhost
+          ansible_port: 2202
+          ansible_user: root
+
+# For production, use real hosts:
+#
+# all:
+#   children:
+#     backend_vms:
+#       hosts:
+#         prod-vm1:
+#           ansible_host: 10.0.1.10
+#           ansible_user: ubuntu
+#         prod-vm2:
+#           ansible_host: 10.0.1.11
+#           ansible_user: ubuntu
+#       vars:
+#         ansible_ssh_private_key_file: ~/.ssh/your_admin_key

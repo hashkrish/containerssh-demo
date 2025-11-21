@@ -1,0 +1,78 @@
+---
+# Ansible Playbook: Distribute ContainerSSH Backend Service Key
+#
+# This playbook distributes the ContainerSSH backend service public key
+# to all backend VMs' authorized_keys files for all users.
+#
+# Usage:
+#   ansible-playbook distribute_keys.yml
+#   ansible-playbook distribute_keys.yml --limit vm1
+#   ansible-playbook distribute_keys.yml -e "service_key_path=../containerssh/keys/backend_id_ed25519.pub"
+
+- name: Distribute ContainerSSH Backend Service Key
+  hosts: backend_vms
+  gather_facts: yes
+  vars:
+    service_key_path: "../containerssh/keys/backend_id_ed25519.pub"
+    target_users:
+      - alice
+      - bob
+      - admin-john
+      - dev-sarah
+      - testuser
+
+  tasks:
+    - name: Read backend service public key
+      delegate_to: localhost
+      slurp:
+        src: "{{ service_key_path }}"
+      register: service_pubkey
+      run_once: true
+
+    - name: Ensure .ssh directory exists for each user
+      file:
+        path: "/home/{{ item }}/.ssh"
+        state: directory
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: "0700"
+      loop: "{{ target_users }}"
+
+    - name: Ensure authorized_keys file exists
+      file:
+        path: "/home/{{ item }}/.ssh/authorized_keys"
+        state: touch
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: "0600"
+      loop: "{{ target_users }}"
+
+    - name: Add ContainerSSH service key to authorized_keys
+      authorized_key:
+        user: "{{ item }}"
+        key: "{{ service_pubkey.content | b64decode }}"
+        state: present
+        comment: "ContainerSSH backend service key"
+      loop: "{{ target_users }}"
+
+    - name: Verify SSH configuration allows public key auth
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PubkeyAuthentication"
+        line: "PubkeyAuthentication yes"
+        state: present
+      notify: Restart SSH
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication no"
+        state: present
+      notify: Restart SSH
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: ssh
+        state: restarted

@@ -1,0 +1,85 @@
+---
+# Ansible Playbook: Rotate ContainerSSH Backend Service Key
+#
+# This playbook performs zero-downtime key rotation:
+# 1. Adds new key to all backend VMs
+# 2. Waits for confirmation
+# 3. Removes old key from all backend VMs
+#
+# Usage:
+#   ansible-playbook rotate_keys.yml -e "old_key_path=../containerssh/keys/backend_id_ed25519.pub.old" \
+#                                     -e "new_key_path=../containerssh/keys/backend_id_ed25519.pub"
+
+- name: Rotate ContainerSSH Backend Service Key (Phase 1 - Add New Key)
+  hosts: backend_vms
+  gather_facts: yes
+  vars:
+    new_key_path: "../containerssh/keys/backend_id_ed25519.pub"
+    old_key_path: "../containerssh/keys/backend_id_ed25519.pub.old"
+    target_users:
+      - alice
+      - bob
+      - admin-john
+      - dev-sarah
+      - testuser
+
+  tasks:
+    - name: Read new service public key
+      delegate_to: localhost
+      slurp:
+        src: "{{ new_key_path }}"
+      register: new_pubkey
+      run_once: true
+
+    - name: Add new ContainerSSH service key to authorized_keys
+      authorized_key:
+        user: "{{ item }}"
+        key: "{{ new_pubkey.content | b64decode }}"
+        state: present
+        comment: "ContainerSSH backend service key (NEW)"
+      loop: "{{ target_users }}"
+
+    - name: Display rotation status
+      debug:
+        msg: |
+          Phase 1 complete: New key added to all backend VMs.
+
+          Next steps:
+          1. Update ContainerSSH to use the new key
+          2. Test connections work with new key
+          3. Run Phase 2 to remove old key:
+             ansible-playbook rotate_keys.yml --tags remove_old
+
+- name: Rotate ContainerSSH Backend Service Key (Phase 2 - Remove Old Key)
+  hosts: backend_vms
+  gather_facts: yes
+  tags: [never, remove_old]
+  vars:
+    old_key_path: "../containerssh/keys/backend_id_ed25519.pub.old"
+    target_users:
+      - alice
+      - bob
+      - admin-john
+      - dev-sarah
+      - testuser
+
+  tasks:
+    - name: Read old service public key
+      delegate_to: localhost
+      slurp:
+        src: "{{ old_key_path }}"
+      register: old_pubkey
+      run_once: true
+      when: old_key_path is defined
+
+    - name: Remove old ContainerSSH service key from authorized_keys
+      authorized_key:
+        user: "{{ item }}"
+        key: "{{ old_pubkey.content | b64decode }}"
+        state: absent
+      loop: "{{ target_users }}"
+      when: old_pubkey is defined
+
+    - name: Display completion status
+      debug:
+        msg: "Phase 2 complete: Old key removed from all backend VMs. Rotation finished!"
