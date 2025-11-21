@@ -73,27 +73,28 @@ else
     test_result "Dev user routes to vm2" 1
 fi
 
+# Wait for ContainerSSH to be ready (check if port 2222 is accepting connections)
+echo "Waiting for ContainerSSH SSH port to be ready..."
+for i in {1..30}; do
+    if nc -z localhost 2222 2>/dev/null || timeout 1 bash -c "echo > /dev/tcp/localhost/2222" 2>/dev/null; then
+        echo "  → SSH port is ready"
+        sleep 2  # Give it a moment to fully initialize
+        break
+    fi
+    sleep 1
+done
+
 # Test 4: SSH connection test for alice
 echo "Test 4: SSH Connection - Alice Authentication"
 if [ -f "$PROJECT_ROOT/data/test_keys/alice_id_ed25519" ]; then
-    # Test if authentication works (connection may close due to backend issues)
-    OUTPUT=$(timeout 10 ssh -i "$PROJECT_ROOT/data/test_keys/alice_id_ed25519" \
+    # Try SSH connection with debug output to check authentication
+    if timeout 10 ssh -i "$PROJECT_ROOT/data/test_keys/alice_id_ed25519" \
         -p 2222 \
         -o "StrictHostKeyChecking=no" \
         -o "UserKnownHostsFile=/dev/null" \
-        -o "LogLevel=INFO" \
+        -o "LogLevel=DEBUG1" \
         -o "ConnectTimeout=5" \
-        alice@localhost "echo test" 2>&1 || true)
-
-    # Check if authentication succeeded (either command worked or got authenticated message)
-    if echo "$OUTPUT" | grep -qE "(test|Authenticated to|Server accepts key)" || \
-       timeout 5 ssh -i "$PROJECT_ROOT/data/test_keys/alice_id_ed25519" \
-           -p 2222 \
-           -o "StrictHostKeyChecking=no" \
-           -o "UserKnownHostsFile=/dev/null" \
-           -o "ConnectTimeout=5" \
-           -o "BatchMode=yes" \
-           alice@localhost exit 2>&1 | grep -q "Authenticated"; then
+        alice@localhost "echo test" 2>&1 | grep -q "Server accepts key"; then
         test_result "Alice can authenticate via SSH" 0
     else
         test_result "Alice can authenticate via SSH" 1
@@ -103,29 +104,20 @@ else
 fi
 
 # Brief pause between SSH tests to avoid connection issues
-sleep 2
+echo "  → Waiting before next SSH test..."
+sleep 3
 
 # Test 5: SSH connection test for bob
 echo "Test 5: SSH Connection - Bob Authentication"
 if [ -f "$PROJECT_ROOT/data/test_keys/bob_id_ed25519" ]; then
-    # Test if authentication works (connection may close due to backend issues)
-    OUTPUT=$(timeout 10 ssh -i "$PROJECT_ROOT/data/test_keys/bob_id_ed25519" \
+    # Try SSH connection with debug output to check authentication
+    if timeout 10 ssh -i "$PROJECT_ROOT/data/test_keys/bob_id_ed25519" \
         -p 2222 \
         -o "StrictHostKeyChecking=no" \
         -o "UserKnownHostsFile=/dev/null" \
-        -o "LogLevel=INFO" \
+        -o "LogLevel=DEBUG1" \
         -o "ConnectTimeout=5" \
-        bob@localhost "echo test" 2>&1 || true)
-
-    # Check if authentication succeeded
-    if echo "$OUTPUT" | grep -qE "(test|Authenticated to|Server accepts key)" || \
-       timeout 5 ssh -i "$PROJECT_ROOT/data/test_keys/bob_id_ed25519" \
-           -p 2222 \
-           -o "StrictHostKeyChecking=no" \
-           -o "UserKnownHostsFile=/dev/null" \
-           -o "ConnectTimeout=5" \
-           -o "BatchMode=yes" \
-           bob@localhost exit 2>&1 | grep -q "Authenticated"; then
+        bob@localhost "echo test" 2>&1 | grep -q "Server accepts key"; then
         test_result "Bob can authenticate via SSH" 0
     else
         test_result "Bob can authenticate via SSH" 1
