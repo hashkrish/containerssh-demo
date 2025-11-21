@@ -1,0 +1,108 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build test container
+        run: docker compose -f docker-compose.test.yml build configserver-test
+
+      - name: Run unit tests in Docker
+        run: |
+          docker compose -f docker-compose.test.yml run --rm configserver-test
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./configserver/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+        continue-on-error: true
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate SSH keys
+        run: ./scripts/generate_keys.sh
+
+      - name: Build containers
+        run: docker compose -f docker-compose.test.yml build
+
+      - name: Start services
+        run: docker compose -f docker-compose.test.yml up -d configserver containerssh vm1 vm2
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for services to start..."
+          sleep 10
+
+      - name: Check service health
+        run: |
+          curl -f http://localhost:8080/health || (docker compose -f docker-compose.test.yml logs && exit 1)
+
+      - name: Distribute keys to backend VMs
+        run: ./scripts/distribute_keys.sh _test
+
+      - name: Run integration tests
+        run: ./scripts/integration_test.sh _test
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "=== ContainerSSH logs ==="
+          docker compose -f docker-compose.test.yml logs containerssh
+          echo "=== Config Server logs ==="
+          docker compose -f docker-compose.test.yml logs configserver
+          echo "=== VM1 logs ==="
+          docker logs backend_vm1_test
+          echo "=== VM2 logs ==="
+          docker logs backend_vm2_test
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linting tools
+        run: |
+          pip install flake8 black
+
+      - name: Run flake8
+        run: |
+          flake8 configserver/app.py --max-line-length=120 --extend-ignore=E501
+        continue-on-error: true
+
+      - name: Check formatting with black
+        run: |
+          black --check configserver/app.py
+        continue-on-error: true
