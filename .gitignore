@@ -1,0 +1,36 @@
+# SSH Keys (NEVER commit private keys!)
+containerssh/keys/*
+!containerssh/keys/.gitkeep
+data/test_keys/*
+!data/test_keys/.gitkeep
+
+# Generated files
+data/known_hosts
+
+# Docker
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv
+
+# Ansible
+*.retry
+.ansible/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
