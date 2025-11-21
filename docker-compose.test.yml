@@ -1,13 +1,23 @@
-version: "3.8"
-
 services:
-  # Config server that determines routing logic
+  # Unit tests for config server
+  configserver-test:
+    build:
+      context: ./configserver
+      target: test
+    container_name: cs_configserver_test
+    command: pytest tests/ -v --cov=app --cov-report=term --cov-report=xml --cov-report=html
+    volumes:
+      - ./configserver/tests:/app/tests
+      - ./configserver/coverage:/app/coverage
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # Config server for integration tests
   configserver:
     build:
       context: ./configserver
       target: production
-    container_name: cs_configserver
-    restart: unless-stopped
+    container_name: cs_configserver_integration
     environment:
       - FLASK_ENV=production
     ports:
@@ -17,17 +27,16 @@ services:
     networks:
       - containerssh_net
 
-  # ContainerSSH gateway
+  # ContainerSSH gateway for integration tests
   containerssh:
     image: containerssh/containerssh:v0.5.2
-    container_name: containerssh
-    restart: unless-stopped
+    container_name: containerssh_integration
     depends_on:
       - configserver
       - vm1
       - vm2
     ports:
-      - "2222:2222"  # SSH port (using 2222 for local testing)
+      - "2222:2222"
     environment:
       - CONTAINERSSH_CONFIG=/etc/containerssh/config.yaml
     volumes:
@@ -37,23 +46,21 @@ services:
     networks:
       - containerssh_net
 
-  # Mock backend VM 1
+  # Mock backend VM 1 for integration tests
   vm1:
     build: ./backend-vms
-    container_name: backend_vm1
+    container_name: backend_vm1_test
     hostname: vm1
-    restart: unless-stopped
     environment:
       - VM_NAME=vm1
     networks:
       - containerssh_net
 
-  # Mock backend VM 2
+  # Mock backend VM 2 for integration tests
   vm2:
     build: ./backend-vms
-    container_name: backend_vm2
+    container_name: backend_vm2_test
     hostname: vm2
-    restart: unless-stopped
     environment:
       - VM_NAME=vm2
     networks:
