@@ -54,6 +54,10 @@ run_integration_tests() {
         "$SCRIPT_DIR/generate_keys.sh"
     fi
 
+    # Ensure keys are readable by containers
+    chmod 644 "$PROJECT_ROOT/containerssh/keys/host_ed25519" 2>/dev/null || true
+    chmod 644 "$PROJECT_ROOT/containerssh/keys/backend_id_ed25519" 2>/dev/null || true
+
     # Start services for integration testing
     echo "Starting services..."
     docker compose -f docker-compose.test.yml up -d configserver containerssh vm1 vm2

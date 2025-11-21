@@ -130,6 +130,21 @@ docker compose -f docker-compose.test.yml run --rm configserver-test pytest test
 
 ## Known Issues
 
+### SSH Key Permissions in Containers
+
+ContainerSSH requires read access to host keys when running in containers. If you see:
+```
+failed to load host key /etc/containerssh/keys/host_ed25519 (permission denied)
+```
+
+The fix is already included in test scripts, but if running manually:
+```bash
+chmod 644 containerssh/keys/host_ed25519
+chmod 644 containerssh/keys/backend_id_ed25519
+```
+
+**Note**: Making keys world-readable (644) is acceptable for test/demo environments. In production, use proper secrets management or user mapping.
+
 ### SSH Integration Tests (Platform-Specific)
 
 The end-to-end SSH connection tests (Tests 4-5) may be flaky in certain environments due to:

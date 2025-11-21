@@ -41,7 +41,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate SSH keys
-        run: ./scripts/generate_keys.sh
+        run: |
+          ./scripts/generate_keys.sh
+          # Ensure ContainerSSH can read the keys in CI
+          chmod 644 containerssh/keys/host_ed25519
+          chmod 644 containerssh/keys/backend_id_ed25519
 
       - name: Build containers
         run: docker compose -f docker-compose.test.yml build
