@@ -17,7 +17,7 @@ services:
 
   # ContainerSSH gateway
   containerssh:
-    image: containerssh/containerssh:0.4
+    image: containerssh/containerssh:v0.5.2
     container_name: containerssh
     restart: unless-stopped
     depends_on:

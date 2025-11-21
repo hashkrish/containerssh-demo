@@ -1,4 +1,4 @@
-# ContainerSSH Configuration (Version 0.4)
+# ContainerSSH Configuration (Version 0.5)
 # SSH multiplexing/routing gateway
 
 # SSH Server Settings
@@ -13,15 +13,20 @@ ssh:
 
 # Logging
 log:
+  format: ljson
   level: debug
 
 # Authentication - webhook to config server
-# In v0.4, password and pubkey are BOOLEAN flags
+# In v0.5, authentication is method-based with nested webhook config
+# The webhook URL should be just the base server URL - ContainerSSH appends the path
 auth:
-  password: false
-  pubkey: true
-  url: http://configserver:8080
-  timeout: 10s
+  password:
+    method: ""
+  publicKey:
+    method: webhook
+    webhook:
+      url: http://configserver:8080
+      timeout: 10s
 
 # Configuration Server - provides backend routing
 configserver:
