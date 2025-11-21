@@ -1,0 +1,32 @@
+# ContainerSSH Configuration (Version 0.4)
+# SSH multiplexing/routing gateway
+
+# SSH Server Settings
+ssh:
+  listen: 0.0.0.0:2222
+  hostkeys:
+    - /etc/containerssh/keys/host_ed25519
+  banner: |
+    ==========================================
+    ContainerSSH Gateway - Demo Environment
+    ==========================================
+
+# Logging
+log:
+  level: debug
+
+# Authentication - webhook to config server
+# In v0.4, password and pubkey are BOOLEAN flags
+auth:
+  password: false
+  pubkey: true
+  url: http://configserver:8080
+  timeout: 10s
+
+# Configuration Server - provides backend routing
+configserver:
+  url: http://configserver:8080/config
+  timeout: 10s
+
+# Backend (will be set by config server dynamically)
+backend: sshproxy
