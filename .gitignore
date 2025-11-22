@@ -7,6 +7,9 @@ data/test_keys/*
 # Generated files
 data/known_hosts
 
+# Environment variables (contains OAuth secrets)
+.env
+
 # Docker
 docker-compose.override.yml
 

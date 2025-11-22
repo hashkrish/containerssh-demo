@@ -12,9 +12,9 @@
 
 ```bash
 # Start/Stop
-docker-compose up -d           # Start all services
-docker-compose down            # Stop all services
-docker-compose restart         # Restart services
+docker compose up -d           # Start all services
+docker compose down            # Stop all services
+docker compose restart         # Restart services
 
 # Test Connections
 ./scripts/test_connection.sh alice      # Test as alice
@@ -22,8 +22,8 @@ docker-compose restart         # Restart services
 ssh -i data/test_keys/alice_id_ed25519 -p 2222 alice@localhost
 
 # View Logs
-docker-compose logs -f containerssh     # ContainerSSH logs
-docker-compose logs -f configserver     # Config server logs
+docker compose logs -f containerssh     # ContainerSSH logs
+docker compose logs -f configserver     # Config server logs
 docker logs backend_vm1                 # Backend VM logs
 
 # Debugging
@@ -72,9 +72,9 @@ ansible backend_vms -m ping
 
 | Problem | Solution |
 |---------|----------|
-| Port 2222 refused | `docker-compose restart containerssh` |
+| Port 2222 refused | `docker compose restart containerssh` |
 | Publickey denied | Check `./scripts/verify.sh` output |
-| Config server down | `docker-compose logs configserver` |
+| Config server down | `docker compose logs configserver` |
 | Wrong VM routing | Check `data/users_map.json` and config server logs |
 
 ## Architecture at a Glance

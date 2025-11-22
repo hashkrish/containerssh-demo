@@ -212,10 +212,10 @@ elif username.startswith("dev"):
 
 ```bash
 # ContainerSSH logs
-docker-compose logs -f containerssh
+docker compose logs -f containerssh
 
 # Config server logs
-docker-compose logs -f configserver
+docker compose logs -f configserver
 
 # Backend VM logs
 docker logs backend_vm1

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # Config server that determines routing logic
   configserver:
@@ -14,6 +12,8 @@ services:
       - "8080:8080"
     volumes:
       - ./data:/data
+      - ./containerssh/keys:/etc/containerssh/keys:ro
+      - /var/run/docker.sock:/var/run/docker.sock # Allow user provisioning on backend VMs
     networks:
       - containerssh_net
 
@@ -27,7 +27,8 @@ services:
       - vm1
       - vm2
     ports:
-      - "2222:2222"  # SSH port (using 2222 for local testing)
+      - "2222:2222" # SSH port (using 2222 for local testing)
+      - "9080:8080" # OAuth redirect server
     environment:
       - CONTAINERSSH_CONFIG=/etc/containerssh/config.yaml
     volumes:

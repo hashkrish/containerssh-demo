@@ -23,12 +23,12 @@ bash "$SCRIPT_DIR/generate_keys.sh"
 # Step 2: Build Docker images
 echo
 echo "[Step 2/4] Building Docker images..."
-docker-compose build
+docker compose build
 
 # Step 3: Start services
 echo
 echo "[Step 3/4] Starting services..."
-docker-compose up -d
+docker compose up -d
 
 # Wait for services to be ready
 echo
@@ -70,6 +70,6 @@ echo "Or manually:"
 echo "  ssh -i data/test_keys/alice_id_ed25519 -p 2222 alice@localhost"
 echo
 echo "View logs:"
-echo "  docker-compose logs -f containerssh"
-echo "  docker-compose logs -f configserver"
+echo "  docker compose logs -f containerssh"
+echo "  docker compose logs -f configserver"
 echo

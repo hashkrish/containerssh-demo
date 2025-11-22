@@ -16,17 +16,24 @@ log:
   format: ljson
   level: debug
 
-# Authentication - webhook to config server
-# In v0.5, authentication is method-based with nested webhook config
-# The webhook URL should be just the base server URL - ContainerSSH appends the path
+# Authentication - Google OAuth2 via keyboard-interactive device flow
+# Users will see OAuth URL and code in their terminal during SSH connection
 auth:
   password:
     method: ""
   publicKey:
-    method: webhook
-    webhook:
-      url: http://configserver:8080
-      timeout: 10s
+    method: ""
+  keyboardInteractive:
+    method: oauth2
+    oauth2:
+      clientId: "${GOOGLE_CLIENT_ID}"
+      clientSecret: "${GOOGLE_CLIENT_SECRET}"
+      provider: oidc
+      oidc:
+        url: "https://accounts.google.com/"
+        deviceFlow: false
+        authorizationCodeFlow: true
+        redirectURI: "http://localhost:9080"
 
 # Configuration Server - provides backend routing
 configserver:
